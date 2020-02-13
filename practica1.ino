@@ -29,7 +29,7 @@ int buttonState = 0;         // variable for reading the pushbutton status
 
 OneButton button(4,false);
 
-unsigned long inicio, finalizado, Ttranscurrido;
+unsigned long inicio, finalizado, Ttranscurrido=0, Ttranscurrido_anterior=0;
 
 
 void mostrar(byte simbol[16])
@@ -590,7 +590,7 @@ void start_singleClick(){
   Serial.print("single click\n");
   if(__switch_function==2){ //SI estoy jugando paso a PAUSA y a MOSTRAR PUNTAJE
     __switch_function=3; //MENU DE PAUSA
-  }else if(__switch_function==3){ //Si estamos en pausa
+  }else if(__switch_function==3){
     __switch_function=1; //Vamos a countdown con tiempo + tiempoguardado.
   }
 }
@@ -634,19 +634,20 @@ void loop()
       administrar_puntaje(1);
       delay(1000);
       lc.clearDisplay(0);
-      inicio = millis() + Ttranscurrido; 
+      inicio = millis(); 
+      Ttranscurrido_anterior = Ttranscurrido;
       __switch_function=2;
       break;
     case 2:
         finalizado = millis();
         Ttranscurrido = finalizado - inicio;
-        Serial.print(Ttranscurrido);
+        Serial.print(Ttranscurrido+Ttranscurrido_anterior);
         Serial.print("\n");
       break;
     case 3:
       
       /*int puntaje = (ingame_time-previus_ingame_time)/1000 ;*/
-      int puntaje = (Ttranscurrido/1000) ;
+      int puntaje = ((Ttranscurrido+Ttranscurrido_anterior)/1000) ;
       administrar_puntaje((int)puntaje);
       break;
     case 4:
