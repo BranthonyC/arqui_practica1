@@ -7,7 +7,7 @@
 
 
 
-LedControl lc = LedControl(11, 13, 10, 1);
+LedControl lc = LedControl(52, 48, 50, 1);
 int __DISPLAY__[16][8] = {{1}};
 int message_start = 0;
 //13 3 4 10 6 11 15 16
@@ -24,24 +24,23 @@ unsigned long previusTime=0;
 int interval=3000;
 int __switch_function= 0;
 int sensorValue = 0;
-const int buttonPin = 2;     // the number of the pushbutton pin
+const int buttonPin = 30;     // the number of the pushbutton pin
 int buttonState = 0;         // variable for reading the pushbutton status
 
 OneButton button(4,false);
+OneButton buttonLeft(7, false);
+OneButton buttonRigth(3, false);
 
 unsigned long inicio, finalizado, Ttranscurrido=0, Ttranscurrido_anterior=0;
 
 
 void mostrar(byte simbol[16])
-{                             // funcion mostrar_0
-  lc.setRow(0, 0, simbol[0]); // establece fila con valor de array cero en misma posicion  
-  lc.setRow(0, 1, simbol[1]); // establece fila con valor de array cero en misma posicion  
-  lc.setRow(0, 2, simbol[2]); // establece fila con valor de array cero en misma posicion  
-  lc.setRow(0, 3, simbol[3]); // establece fila con valor de array cero en misma posicion  
-  lc.setRow(0, 4, simbol[4]); // establece fila con valor de array cero en misma posicion  
-  lc.setRow(0, 5, simbol[5]); // establece fila con valor de array cero en misma posicion  
-  lc.setRow(0, 6, simbol[6]); // establece fila con valor de array cero en misma posicion  
-  lc.setRow(0, 7, simbol[7]); // establece fila con valor de array cero en misma posicion
+{
+
+  for(int i=0; i<8;i++){
+    lc.setRow(0,i,simbol[i]);
+  }
+  
   for(int i=0; i<8; i++){
     digitalWrite(fila[i], LOW);
     for(int j=0; j<8; j++){
@@ -51,7 +50,7 @@ void mostrar(byte simbol[16])
         digitalWrite(col[j], LOW);
       }
     }
-    /*delayMicroseconds(50);*/
+    delay(sensorValue);
     digitalWrite(fila[i], HIGH);
    }
 }
@@ -69,14 +68,17 @@ void mostrar_puntaje(byte decenas[8], byte unidades[8]){
   for(int i=0; i<8; i++){
     digitalWrite(fila[i], LOW);
     for(int j=0; j<8; j++){
-      if(((unidades[i] >> 7-j) & 1) !=0){
+      if(((unidades[i]>>7-j) & 1) !=0){
         digitalWrite(col[j], HIGH);
       }else{
         digitalWrite(col[j], LOW);
       }
     }
+    delay(sensorValue);
     digitalWrite(fila[i], HIGH);
    }
+
+   
 }
 
 
@@ -577,10 +579,21 @@ void setup()
   button.attachDoubleClick(start_doubleClick);
   button.attachClick(start_singleClick);
   button.attachLongPressStop(start_longClick);
+
+  buttonLeft.attachClick(left_click);
+  buttonRigth.attachClick(right_click);
   
   pinMode(buttonPin, INPUT);
 }
 
+
+void left_click(){
+  Serial.print("Tecla izquierda");
+}
+
+void right_click(){
+  Serial.print("Telca derecha");
+}
 
 void start_doubleClick(){
   Serial.print("double click\n");
@@ -596,20 +609,26 @@ void start_singleClick(){
 }
 
 void start_longClick(){
+  Serial.print("Long click");
   if(__switch_function==0){
     Serial.print("Cambiando a cuenta regresiva");
     lc.clearDisplay(0);
     __switch_function=1;  
+  }else if(__switch_function==3){
+    __switch_function=0; //Vamos a mensaje
   }
 }
+
+
+
 void loop()
 {
+  
   sensorValue=analogRead(A0)*0.1;
-  buttonState = digitalRead(buttonPin);
-  /*Serial.print(sensorValue);
-  Serial.print("\n");*/
+  buttonState = digitalRead(30);
   button.tick();
-  /*delay(100);*/
+  buttonLeft.tick();
+  buttonRigth.tick();
   switch (__switch_function){
     case 0:
       mostrar(current->message_sprite); // llama funcion mostrar_0
@@ -621,7 +640,6 @@ void loop()
         current = current->prev;
         
       }
-      /*current = current->next;*/
       delay(demora);
       break;
     case 1:
@@ -646,7 +664,6 @@ void loop()
       break;
     case 3:
       
-      /*int puntaje = (ingame_time-previus_ingame_time)/1000 ;*/
       int puntaje = ((Ttranscurrido+Ttranscurrido_anterior)/1000) ;
       administrar_puntaje((int)puntaje);
       break;

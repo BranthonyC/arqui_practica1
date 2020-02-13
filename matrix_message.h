@@ -2388,12 +2388,12 @@ byte message_123[16] = {
 
 byte zero[8] = { // array que contiene todos los elementos de las
     B00000000,   // filas necesarias por mostrar el digito cero
-    B01111100,
-    B01000100,
-    B01000100,
-    B01000100,
-    B01000100,
-    B01111100,
+    B00111100,
+    B00100100,
+    B00100100,
+    B00100100,
+    B00100100,
+    B00111100,
     B00000000};
 
 byte uno[8] = { // array que contiene todos los elementos de las
@@ -2443,7 +2443,7 @@ byte cinco[8] = { // array que contiene todos los elementos de las
     B00000100,
     B00000100,
     B01000100,
-    B00111000};
+    B01111100};
 
 byte seis[8] = { // array que contiene todos los elementos de las
     B00111000,   // filas necesarias por mostrar el digito seis
