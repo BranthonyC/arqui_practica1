@@ -10,7 +10,7 @@
 LedControl lc = LedControl(11, 13, 10, 1);
 int __DISPLAY__[16][8] = {{1}};
 int message_start = 0;
-//13 3 4 10 6 1115 16
+//13 3 4 10 6 11 15 16
 int col[] = {26, 43, 45, 23, 49, 24, 28 ,29 };
 //9 14 8 12 1 7 2 5
 int fila[] = {22, 27, 53, 25, 39, 51, 41, 47};
@@ -23,242 +23,38 @@ unsigned long previus_ingame_time=0;
 unsigned long previusTime=0;
 int interval=3000;
 int __switch_function= 0;
-
 int sensorValue = 0;
+const int buttonPin = 2;     // the number of the pushbutton pin
+int buttonState = 0;         // variable for reading the pushbutton status
 
 OneButton button(4,false);
 
-
-void setup()
-{
- 
-  Serial.begin(9600);
-
-  //The MAX72XX is in power-saving mode on startup, we have to do a wakeup call
-  lc.shutdown(0, false);
-  //Set the brightness to a medium values (0~15 possible values)
-  lc.setIntensity(0, 2);
-  //and clear the display
-  lc.clearDisplay(0);
-
-  for(int i = 0; i < 8; i++){
-    pinMode(col[i], OUTPUT);
-    pinMode(fila[i], OUTPUT);
-  }
-  for(int i = 0; i < 8; i++){
-    digitalWrite(fila[i], HIGH);
-    digitalWrite(col[i], LOW);
-  }
-
-/*  insertLast(prueba);*/
-  insertLast(message_0);
-  insertLast(message_1);
-  insertLast(message_2);
-  insertLast(message_3);
-  insertLast(message_4);
-  insertLast(message_5);
-  insertLast(message_6);
-  insertLast(message_7);
-  insertLast(message_8);
-  insertLast(message_9);
-  insertLast(message_10);
-  insertLast(message_11);
-  insertLast(message_12);
-  insertLast(message_13);
-  insertLast(message_14);
-  insertLast(message_15);
-  insertLast(message_16);
-  insertLast(message_17);
-  insertLast(message_18);
-  insertLast(message_19);
-  insertLast(message_20);
-  insertLast(message_21);
-  insertLast(message_22);
-  insertLast(message_23);
-  insertLast(message_24);
-  insertLast(message_25);
-  insertLast(message_26);
-  insertLast(message_27);
-  insertLast(message_28);
-  insertLast(message_29);
-  insertLast(message_30);
-  insertLast(message_31);
-  insertLast(message_32);
-  insertLast(message_33);
-  insertLast(message_34);
-  insertLast(message_35);
-  insertLast(message_36);
-  insertLast(message_37);
-  insertLast(message_38);
-  insertLast(message_39);
-  insertLast(message_40);
-  insertLast(message_41);
-  insertLast(message_42);
-  insertLast(message_43);
-  insertLast(message_44);
-  insertLast(message_45);
-  insertLast(message_46);
-  insertLast(message_47);
-  insertLast(message_48);
-  insertLast(message_49);
-  insertLast(message_50);
-  insertLast(message_51);
-  insertLast(message_52);
-  insertLast(message_53);
-  insertLast(message_54);
-  insertLast(message_55);
-  insertLast(message_56);
-  insertLast(message_57);
-  insertLast(message_58);
-  insertLast(message_59);
-  insertLast(message_60);
-  insertLast(message_61);
-  insertLast(message_62);
-  insertLast(message_63);
-  insertLast(message_64);
-  insertLast(message_65);
-  insertLast(message_66);
-  insertLast(message_67);
-  insertLast(message_68);
-  insertLast(message_69);
-  insertLast(message_70);
-  insertLast(message_71);
-  insertLast(message_72);
-  insertLast(message_73);
-  insertLast(message_74);
-  insertLast(message_75);
-  insertLast(message_76);
-  insertLast(message_77);
-  insertLast(message_78);
-  insertLast(message_79);
-  insertLast(message_80);
-  insertLast(message_81);
-  insertLast(message_82);
-  insertLast(message_83);
-  insertLast(message_84);
-  insertLast(message_85);
-  insertLast(message_86);
-  insertLast(message_87);
-  insertLast(message_88);
-  insertLast(message_89);
-  insertLast(message_90);
-  insertLast(message_91);
-  insertLast(message_92);
-  insertLast(message_93);
-  insertLast(message_94);
-  insertLast(message_95);
-  insertLast(message_96);
-  insertLast(message_97);
-  insertLast(message_98);
-  insertLast(message_99);
-  insertLast(message_100);
-   insertLast(message_101);
-  insertLast(message_102);
-  insertLast(message_103);
-  insertLast(message_104);
-  insertLast(message_105);
-  insertLast(message_124);
-  insertLast(message_106);
-  insertLast(message_107);
-  insertLast(message_108);
-  insertLast(message_109);
-  insertLast(message_110);
-  insertLast(message_125);
-  insertLast(message_111);
-  insertLast(message_112);
-  insertLast(message_113);
-  insertLast(message_114);
-  insertLast(message_115);
-  insertLast(message_116);
-  insertLast(message_117);
-  insertLast(message_118);
-  insertLast(message_119);
-  insertLast(message_120);
-  insertLast(message_121);
-  insertLast(message_122);
-  insertLast(message_123);
-  current = first;
-
-  // initialize the pushbutton pin as an input:
-  /*pinMode(buttonPin, INPUT);
-  pinMode(startButton, INPUT);*/
-
-  button.attachDoubleClick(start_doubleClick);
-  button.attachClick(start_singleClick);
-  button.attachLongPressStop(start_longClick);
-}
+unsigned long inicio, finalizado, Ttranscurrido;
 
 
-void start_doubleClick(){
-  Serial.print("double click\n");
-}
-
-void start_singleClick(){
-  Serial.print("single click\n");
-  if(__switch_function==2){ //Jugando
-    __switch_function=3; //Vamos a pausa
-  }else if(__switch_function==3){ //Si estamos en pausa
-    __switch_function=1; //Vamos a countdown
-  }
-}
-
-void start_longClick(){
-  if(__switch_function==0){
-    Serial.print("Cambiando a cuenta regresiva");
-    lc.clearDisplay(0);
-    __switch_function=1;  
-  }
-}
-void loop()
-{
-  sensorValue=analogRead(A0)*0.1;
-  Serial.print(sensorValue);
-  Serial.print("\n");
-  button.tick();
-  /*delay(100);*/
-  switch (__switch_function){
-    case 0:
-      mostrar(current->message_sprite); // llama funcion mostrar_0
-      // check if the pushbutton is pressed. If it is, the buttonState is HIGH:
-      /*if (buttonState == HIGH) IF Switch cambia
-      {
-        current = current->prev;
+void mostrar(byte simbol[16])
+{                             // funcion mostrar_0
+  lc.setRow(0, 0, simbol[0]); // establece fila con valor de array cero en misma posicion  
+  lc.setRow(0, 1, simbol[1]); // establece fila con valor de array cero en misma posicion  
+  lc.setRow(0, 2, simbol[2]); // establece fila con valor de array cero en misma posicion  
+  lc.setRow(0, 3, simbol[3]); // establece fila con valor de array cero en misma posicion  
+  lc.setRow(0, 4, simbol[4]); // establece fila con valor de array cero en misma posicion  
+  lc.setRow(0, 5, simbol[5]); // establece fila con valor de array cero en misma posicion  
+  lc.setRow(0, 6, simbol[6]); // establece fila con valor de array cero en misma posicion  
+  lc.setRow(0, 7, simbol[7]); // establece fila con valor de array cero en misma posicion
+  for(int i=0; i<8; i++){
+    digitalWrite(fila[i], LOW);
+    for(int j=0; j<8; j++){
+      if(((simbol[i+8] >> 7-j) & 1) !=0){
+        digitalWrite(col[j], HIGH);
+      }else{
+        digitalWrite(col[j], LOW);
       }
-      else
-      {
-        current = current->next;
-      }*/
-      current = current->next;
-      delay(demora);
-      break;
-    case 1:
-      administrar_puntaje(33);
-      delay(1000);
-      administrar_puntaje(22);
-      delay(1000);
-      administrar_puntaje(11);
-      delay(1000);
-      administrar_puntaje(1);
-      delay(1000);
-      lc.clearDisplay(0);  
-      __switch_function=2;
-      break;
-    case 2:
-      ingame_time = millis();
-      break;
-    case 3:
-      int puntaje = (ingame_time-previus_ingame_time)/1000 ;
-      administrar_puntaje(puntaje);
-      break;
-    case 4:
-      Serial.print("CUENTA REGRESIVA 3 Segundos\n");
-      break;
-    default:
-      Serial.print("");
-  }
-  delay(sensorValue);
+    }
+    /*delayMicroseconds(50);*/
+    digitalWrite(fila[i], HIGH);
+   }
 }
-
 
 void mostrar_puntaje(byte decenas[8], byte unidades[8]){
   lc.setRow(0, 0, decenas[0]); // establece fila con valor de array cero en misma posicion  
@@ -282,28 +78,7 @@ void mostrar_puntaje(byte decenas[8], byte unidades[8]){
     digitalWrite(fila[i], HIGH);
    }
 }
-void mostrar(byte simbol[16])
-{                             // funcion mostrar_0
-  lc.setRow(0, 0, simbol[0]); // establece fila con valor de array cero en misma posicion  
-  lc.setRow(0, 1, simbol[1]); // establece fila con valor de array cero en misma posicion  
-  lc.setRow(0, 2, simbol[2]); // establece fila con valor de array cero en misma posicion  
-  lc.setRow(0, 3, simbol[3]); // establece fila con valor de array cero en misma posicion  
-  lc.setRow(0, 4, simbol[4]); // establece fila con valor de array cero en misma posicion  
-  lc.setRow(0, 5, simbol[5]); // establece fila con valor de array cero en misma posicion  
-  lc.setRow(0, 6, simbol[6]); // establece fila con valor de array cero en misma posicion  
-  lc.setRow(0, 7, simbol[7]); // establece fila con valor de array cero en misma posicion
-  for(int i=0; i<8; i++){
-    digitalWrite(fila[i], LOW);
-    for(int j=0; j<8; j++){
-      if(((simbol[i+8] >> 7-j) & 1) !=0){
-        digitalWrite(col[j], HIGH);
-      }else{
-        digitalWrite(col[j], LOW);
-      }
-    }
-    digitalWrite(fila[i], HIGH);
-   }
-}
+
 
 void administrar_puntaje(int puntaje){
     switch(puntaje){
@@ -334,7 +109,9 @@ void administrar_puntaje(int puntaje){
         case 9:
           mostrar_puntaje(zero, nueve);
           break;
-        
+        case 10: 
+          mostrar_puntaje(uno,zero);
+          break;
         case 11: 
           mostrar_puntaje(uno,uno);
           break;
@@ -641,4 +418,242 @@ void administrar_puntaje(int puntaje){
           mostrar_puntaje(nueve, nueve);
           break;
       }
+}
+
+void setup()
+{
+ 
+  Serial.begin(9600);
+
+  //The MAX72XX is in power-saving mode on startup, we have to do a wakeup call
+  lc.shutdown(0, false);
+  //Set the brightness to a medium values (0~15 possible values)
+  lc.setIntensity(0, 2);
+  //and clear the display
+  lc.clearDisplay(0);
+
+  for(int i = 0; i < 8; i++){
+    pinMode(col[i], OUTPUT);
+    pinMode(fila[i], OUTPUT);
+  }
+  for(int i = 0; i < 8; i++){
+    digitalWrite(fila[i], HIGH);
+    digitalWrite(col[i], LOW);
+  }
+
+/*  insertLast(prueba);*/
+  insertLast(message_0);
+  insertLast(message_1);
+  insertLast(message_2);
+  insertLast(message_3);
+  insertLast(message_4);
+  insertLast(message_5);
+  insertLast(message_6);
+  insertLast(message_7);
+  insertLast(message_8);
+  insertLast(message_9);
+  insertLast(message_10);
+  insertLast(message_11);
+  insertLast(message_12);
+  insertLast(message_13);
+  insertLast(message_14);
+  insertLast(message_15);
+  insertLast(message_16);
+  insertLast(message_17);
+  insertLast(message_18);
+  insertLast(message_19);
+  insertLast(message_20);
+  insertLast(message_21);
+  insertLast(message_22);
+  insertLast(message_23);
+  insertLast(message_24);
+  insertLast(message_25);
+  insertLast(message_26);
+  insertLast(message_27);
+  insertLast(message_28);
+  insertLast(message_29);
+  insertLast(message_30);
+  insertLast(message_31);
+  insertLast(message_32);
+  insertLast(message_33);
+  insertLast(message_34);
+  insertLast(message_35);
+  insertLast(message_36);
+  insertLast(message_37);
+  insertLast(message_38);
+  insertLast(message_39);
+  insertLast(message_40);
+  insertLast(message_41);
+  insertLast(message_42);
+  insertLast(message_43);
+  insertLast(message_44);
+  insertLast(message_45);
+  insertLast(message_46);
+  insertLast(message_47);
+  insertLast(message_48);
+  insertLast(message_49);
+  insertLast(message_50);
+  insertLast(message_51);
+  insertLast(message_52);
+  insertLast(message_53);
+  insertLast(message_54);
+  insertLast(message_55);
+  insertLast(message_56);
+  insertLast(message_57);
+  insertLast(message_58);
+  insertLast(message_59);
+  insertLast(message_60);
+  insertLast(message_61);
+  insertLast(message_62);
+  insertLast(message_63);
+  insertLast(message_64);
+  insertLast(message_65);
+  insertLast(message_66);
+  insertLast(message_67);
+  insertLast(message_68);
+  insertLast(message_69);
+  insertLast(message_70);
+  insertLast(message_71);
+  insertLast(message_72);
+  insertLast(message_73);
+  insertLast(message_74);
+  insertLast(message_75);
+  insertLast(message_76);
+  insertLast(message_77);
+  insertLast(message_78);
+  insertLast(message_79);
+  insertLast(message_80);
+  insertLast(message_81);
+  insertLast(message_82);
+  insertLast(message_83);
+  insertLast(message_84);
+  insertLast(message_85);
+  insertLast(message_86);
+  insertLast(message_87);
+  insertLast(message_88);
+  insertLast(message_89);
+  insertLast(message_90);
+  insertLast(message_91);
+  insertLast(message_92);
+  insertLast(message_93);
+  insertLast(message_94);
+  insertLast(message_95);
+  insertLast(message_96);
+  insertLast(message_97);
+  insertLast(message_98);
+  insertLast(message_99);
+  insertLast(message_100);
+   insertLast(message_101);
+  insertLast(message_102);
+  insertLast(message_103);
+  insertLast(message_104);
+  insertLast(message_105);
+  insertLast(message_124);
+  insertLast(message_106);
+  insertLast(message_107);
+  insertLast(message_108);
+  insertLast(message_109);
+  insertLast(message_110);
+  insertLast(message_125);
+  insertLast(message_111);
+  insertLast(message_112);
+  insertLast(message_113);
+  insertLast(message_114);
+  insertLast(message_115);
+  insertLast(message_116);
+  insertLast(message_117);
+  insertLast(message_118);
+  insertLast(message_119);
+  insertLast(message_120);
+  insertLast(message_121);
+  insertLast(message_122);
+  insertLast(message_123);
+  current = first;
+
+  // initialize the pushbutton pin as an input:
+  /*pinMode(buttonPin, INPUT);
+  pinMode(startButton, INPUT);*/
+
+  button.attachDoubleClick(start_doubleClick);
+  button.attachClick(start_singleClick);
+  button.attachLongPressStop(start_longClick);
+  
+  pinMode(buttonPin, INPUT);
+}
+
+
+void start_doubleClick(){
+  Serial.print("double click\n");
+}
+
+void start_singleClick(){
+  Serial.print("single click\n");
+  if(__switch_function==2){ //SI estoy jugando paso a PAUSA y a MOSTRAR PUNTAJE
+    __switch_function=3; //MENU DE PAUSA
+  }else if(__switch_function==3){ //Si estamos en pausa
+    __switch_function=1; //Vamos a countdown con tiempo + tiempoguardado.
+  }
+}
+
+void start_longClick(){
+  if(__switch_function==0){
+    Serial.print("Cambiando a cuenta regresiva");
+    lc.clearDisplay(0);
+    __switch_function=1;  
+  }
+}
+void loop()
+{
+  sensorValue=analogRead(A0)*0.1;
+  buttonState = digitalRead(buttonPin);
+  /*Serial.print(sensorValue);
+  Serial.print("\n");*/
+  button.tick();
+  /*delay(100);*/
+  switch (__switch_function){
+    case 0:
+      mostrar(current->message_sprite); // llama funcion mostrar_0
+      // check if the pushbutton is pressed. If it is, the buttonState is HIGH:
+      if (buttonState == HIGH){
+       current = current->next;
+      }
+      else{
+        current = current->prev;
+        
+      }
+      /*current = current->next;*/
+      delay(demora);
+      break;
+    case 1:
+      administrar_puntaje(33);
+      delay(1000);
+      administrar_puntaje(22);
+      delay(1000);
+      administrar_puntaje(11);
+      delay(1000);
+      administrar_puntaje(1);
+      delay(1000);
+      lc.clearDisplay(0);
+      inicio = millis() + Ttranscurrido; 
+      __switch_function=2;
+      break;
+    case 2:
+        finalizado = millis();
+        Ttranscurrido = finalizado - inicio;
+        Serial.print(Ttranscurrido);
+        Serial.print("\n");
+      break;
+    case 3:
+      
+      /*int puntaje = (ingame_time-previus_ingame_time)/1000 ;*/
+      int puntaje = (Ttranscurrido/1000) ;
+      administrar_puntaje((int)puntaje);
+      break;
+    case 4:
+      Serial.print("CUENTA REGRESIVA 3 Segundos\n");
+      break;
+    default:
+      Serial.print("");
+  }
+  delay(sensorValue);
 }
