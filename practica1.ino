@@ -37,22 +37,26 @@ unsigned long inicio, finalizado, Ttranscurrido=0, Ttranscurrido_anterior=0;
 void mostrar(byte simbol[16])
 {
 
-  for(int i=0; i<8;i++){
-    lc.setRow(0,i,simbol[i]);
-  }
-  
-  for(int i=0; i<8; i++){
-    digitalWrite(fila[i], LOW);
-    for(int j=0; j<8; j++){
-      if(((simbol[i+8] >> 7-j) & 1) !=0){
-        digitalWrite(col[j], HIGH);
-      }else{
-        digitalWrite(col[j], LOW);
-      }
+  for(int k=0; k<50;k++){
+    for(int i=0; i<8;i++){
+      lc.setRow(0,i,simbol[i]);
     }
-    delay(sensorValue);
-    digitalWrite(fila[i], HIGH);
-   }
+    
+    for(int i=0; i<8; i++){
+      
+      for(int j=0; j<8; j++){
+        if(((simbol[i+8] >> 7-j) & 1) !=0){
+          digitalWrite(col[j], HIGH);
+        }else{
+          digitalWrite(col[j], LOW);
+        }
+      }
+      digitalWrite(fila[i], LOW);
+      delay(digitalRead(A0)/60);
+      digitalWrite(fila[i], HIGH);
+     }
+     
+  }
 }
 
 void mostrar_puntaje(byte decenas[8], byte unidades[8]){
@@ -74,11 +78,32 @@ void mostrar_puntaje(byte decenas[8], byte unidades[8]){
         digitalWrite(col[j], LOW);
       }
     }
-    delay(sensorValue);
+    /*delay(sensorValue/60);*/
     digitalWrite(fila[i], HIGH);
    }
+}
 
-   
+void leer_matriz(int display[16][8]){
+  for(int i=0; i<8;i++){
+    for(int j=0; j<8;i++){
+      //Set led  
+    }  
+  }
+  delay(1);
+  for(int i=0; i<8; i++){
+    digitalWrite(fila[i], LOW);
+    for(int j=0; j<8; j++){
+      if(((unidades[i]>>7-j) & 1) !=0){
+        digitalWrite(col[j], HIGH);
+      }else{
+        digitalWrite(col[j], LOW);
+      }
+    }
+    /*delay(sensorValue/60);*/
+    digitalWrite(fila[i], HIGH);
+   }
+  
+  
 }
 
 
@@ -624,7 +649,7 @@ void start_longClick(){
 void loop()
 {
   
-  sensorValue=analogRead(A0)*0.1;
+  sensorValue=analogRead(A0);
   buttonState = digitalRead(30);
   button.tick();
   buttonLeft.tick();
@@ -640,7 +665,10 @@ void loop()
         current = current->prev;
         
       }
-      delay(demora);
+      /*delay(demora);*/
+      delay(sensorValue);
+      Serial.print(sensorValue);
+      Serial.print("\n");
       break;
     case 1:
       administrar_puntaje(33);
@@ -673,5 +701,5 @@ void loop()
     default:
       Serial.print("");
   }
-  delay(sensorValue);
+  /*delay(sensorValue/1000);*/
 }
