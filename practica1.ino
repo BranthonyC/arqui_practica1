@@ -4,7 +4,67 @@
 #include "matrix_message.h"
 #include "doubly_linked_list.h"
 #define demora 100
+//***************************************************************************************
+#define ROWS 16
+#define COLS 8
+#define TRUE 1
+#define FALSE 0
 
+unsigned char __none[][8]{ \
+    {0, 0, 0, 0, 0, 0, 0, 0}, \
+    {0, 0, 0, 0, 0, 0, 0, 0}, \
+    {0, 0, 0, 0, 0, 0, 0, 0}, \
+    {0, 0, 0, 0, 0, 0, 0, 0}, \
+    {0, 0, 0, 0, 0, 0, 0, 0}, \
+    {0, 0, 0, 0, 0, 0, 0, 0}, \
+    {0, 0, 0, 0, 0, 0, 0, 0}, \
+    {0, 0, 0, 0, 0, 0, 0, 0} \
+} ;
+
+char Table[ROWS][COLS] = {{0}};
+//char Table[ROWS][COLS] = {0};
+int score = 0;
+
+typedef struct {
+    char **array;
+    int width, row, col;
+} Figura;
+Figura actual;
+Figura carro;
+Figura actual2;
+
+time_t start,end;
+
+
+char GameOn = TRUE;
+double timer = 500000; //half second
+
+const Figura ShapesArray[1]= {
+    {(char *[]){(char []){1,1},(char []){1,1}}, 2}
+};
+
+
+const Figura ShapesArray2[1]= {
+   //{(char *[]){(char []){0,1,0},(char []){1,1,1}, (char []){0,0,0}}, 3}
+    {(char *[]){(char []){1,1},(char []){1,1}}, 2}
+};
+
+Figura CopiarFigura(Figura shape){
+    Figura new_shape = shape;
+    char **copyshape = shape.array;
+    new_shape.array = (char**)malloc(new_shape.width*sizeof(char*));
+    int i, j;
+    for(i = 0; i < new_shape.width; i++){
+        new_shape.array[i] = (char*)malloc(new_shape.width*sizeof(char));
+        for(j=0; j < new_shape.width; j++) {
+            new_shape.array[i][j] = copyshape[i][j];
+        }
+    }
+    return new_shape;
+}
+
+
+//***************************************************************************************
 
 
 LedControl lc = LedControl(52, 48, 50, 1);
@@ -31,7 +91,7 @@ OneButton button(4,false);
 OneButton buttonLeft(7, false);
 OneButton buttonRigth(3, false);
 
-unsigned long inicio, finalizado, Ttranscurrido=0, Ttranscurrido_anterior=0;
+unsigned long inicio, finalizado, Ttranscurrido=1, Ttranscurrido_anterior=0;
 
 
 void mostrar(byte simbol[16])
@@ -81,29 +141,6 @@ void mostrar_puntaje(byte decenas[8], byte unidades[8]){
     /*delay(sensorValue/60);*/
     digitalWrite(fila[i], HIGH);
    }
-}
-
-void leer_matriz(int display[16][8]){
-  for(int i=0; i<8;i++){
-    for(int j=0; j<8;i++){
-      //Set led  
-    }  
-  }
-  delay(1);
-  for(int i=0; i<8; i++){
-    digitalWrite(fila[i], LOW);
-    for(int j=0; j<8; j++){
-      if(((unidades[i]>>7-j) & 1) !=0){
-        digitalWrite(col[j], HIGH);
-      }else{
-        digitalWrite(col[j], LOW);
-      }
-    }
-    /*delay(sensorValue/60);*/
-    digitalWrite(fila[i], HIGH);
-   }
-  
-  
 }
 
 
@@ -452,6 +489,11 @@ void setup()
  
   Serial.begin(9600);
 
+
+   GetFigura();
+   GetCarroFigura();
+   ImprimirTablero();
+         
   //The MAX72XX is in power-saving mode on startup, we have to do a wakeup call
   lc.shutdown(0, false);
   //Set the brightness to a medium values (0~15 possible values)
@@ -598,8 +640,6 @@ void setup()
   current = first;
 
   // initialize the pushbutton pin as an input:
-  /*pinMode(buttonPin, INPUT);
-  pinMode(startButton, INPUT);*/
 
   button.attachDoubleClick(start_doubleClick);
   button.attachClick(start_singleClick);
@@ -685,10 +725,26 @@ void loop()
       __switch_function=2;
       break;
     case 2:
+        
         finalizado = millis();
         Ttranscurrido = finalizado - inicio;
         Serial.print(Ttranscurrido+Ttranscurrido_anterior);
         Serial.print("\n");
+        //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+         /* int c;
+         GetFigura();
+         GetCarroFigura();
+         ImprimirTablero();*/
+         // while(GameOn){
+             
+             // if ((c = getchar()) != NULL) {
+                ManipularFiguras('s');
+
+                // ManipularMovimiento(c);
+           //}
+              //}
+          
+      //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
       break;
     case 3:
       
@@ -702,4 +758,294 @@ void loop()
       Serial.print("");
   }
   /*delay(sensorValue/1000);*/
+}
+
+//******************************************************************************************************************************************************
+
+void Display(unsigned char dat[8][8])    
+{  
+  for(int c = 0; c<8;c++)  
+  {  
+    digitalWrite(fila[c],LOW);//use thr column 
+    //loop
+    for(int r = 0;r<8;r++)  
+    {  
+      digitalWrite(col[r],dat[c][r]);    
+    }  
+    delay(analogRead(A0) / 60);
+    Clear();  //Remove empty display light
+  }  
+}
+
+
+void Display2(unsigned char dat[8][8])    
+{  
+  for(int c = 0; c<8;c++)  
+  {  
+    for(int r = 0;r<8;r++)  
+    {  
+      lc.setLed(0,c,r,dat[c][r]);
+    }  
+  }  
+} 
+
+void BorrarFigura(Figura shape){
+    int i;
+    for(i = 0; i < shape.width; i++){
+        free(shape.array[i]);
+    }
+    free(shape.array);
+}
+
+
+int Ver_posicion(Figura shape){ //VE LA POSICION Y COPIA LA FIGURA
+    char **array = shape.array;
+    int i, j;
+    for(i = 0; i < shape.width;i++) {
+        for(j = 0; j < shape.width ;j++){
+            if((shape.col+j < 0 || shape.col+j >= COLS || shape.row+i >= ROWS)){ //FUERA DE LOS BORDES
+                if(array[i][j]){
+
+                    return FALSE;
+                }
+            }
+            else if(Table[shape.row+i][shape.col+j] && array[i][j])
+            {
+
+                return FALSE;
+            }
+
+        }
+    }
+
+    return TRUE;
+}
+
+int CheckPositionCarro(Figura shape){
+    char **array = shape.array;
+    int i, j;
+    for(i = 0; i < shape.width;i++) {
+        for(j = 0; j < shape.width ;j++){
+            if((shape.col+j < 0 || shape.col+j >= COLS || shape.row >= ROWS)){
+
+                if(array[i][j])
+                {
+                    printf("choque");
+                    end=clock();
+                    GameOn=FALSE;
+                    return FALSE;
+                }
+
+            }
+            else if(Table[shape.row+i][shape.col+j] && array[i][j])
+               {
+                printf("choque");
+                end=clock();
+                GameOn=FALSE;
+                return FALSE;
+            }
+        }
+    }
+
+    return TRUE;
+}
+
+
+
+
+void GetFigura(){
+    Figura new_shape = CopiarFigura(ShapesArray[rand()%1]);
+    new_shape.col = rand()%(COLS-new_shape.width+1);
+    new_shape.row = 0;
+    BorrarFigura(actual);
+    actual = new_shape;
+    
+    if(!Ver_posicion(actual)){
+        GameOn = FALSE;
+       // Display(__none);
+       // Display2(__none);
+    }
+}
+
+
+void GetFigura2(){
+    Figura new_shape = CopiarFigura(ShapesArray[rand()%1]);
+    new_shape.col = rand()%(COLS-new_shape.width+1);
+    new_shape.row = 0;
+    BorrarFigura(actual2);
+    actual2 = new_shape;
+    if(!Ver_posicion(actual2)){
+        GameOn = FALSE;
+       // Display(__none);
+       // Display2(__none);
+    }
+}
+
+
+void GetCarroFigura(){
+    Figura new_shape = CopiarFigura(ShapesArray2[0]);
+    new_shape.col = 3;
+    new_shape.row = 15;
+    carro = new_shape;
+}
+
+void WriteToTable(){
+    if(actual.col == carro.col){
+
+        GameOn = FALSE;
+
+    }
+    if(actual.col+1 == carro.col){
+
+        GameOn = FALSE;
+
+    }
+    if(actual.col-1 == carro.col){
+
+        GameOn = FALSE;
+
+    }
+}
+
+
+void Clear()                          //Clean unused lights  
+{  
+  for(int i = 0;i<8;i++)  
+  {  
+    digitalWrite(fila[i],HIGH);  
+    digitalWrite(col[i],LOW);  
+  }
+  double dificulty = ((Ttranscurrido+Ttranscurrido_anterior)/1000);
+  Serial.print("Dificultad: ");
+  Serial.print(100-dificulty);
+  Serial.print("\n");
+  /*Serial.print(10000/((Ttranscurrido+Ttranscurrido_anterior)/1000));*/
+  if(100-dificulty>1){
+    delay(100-dificulty);    
+  }else if(100-dificulty>0){
+     double dificulty = ((Ttranscurrido+Ttranscurrido_anterior)/1000)*0.1;
+     delay(1-dificulty);    
+  }else{
+    delay(0.01);
+  }
+}  
+
+
+void ImprimirTablero(){
+    char Buffer[ROWS][COLS] = {{0}};
+    char Buffer2[1][COLS] = {{0}};
+    
+    /*En la ultima fila de __display___ meter el buffer 2*/
+    int i, j;
+    for(i = 0; i < actual.width ;i++){
+        for(j = 0; j < actual.width ; j++){
+            if(actual.array[i][j])
+                Buffer[actual.row+i][actual.col+j] = actual.array[i][j];
+        }
+    }
+
+    for(i = 0; i < actual2.width ;i++){
+        for(j = 0; j < actual2.width ; j++){
+            if(actual2.array[i][j])
+                Buffer[actual2.row+i][actual2.col+j] = actual2.array[i][j];
+        }
+    }
+
+    for(i = 0; i < carro.width ;i++){
+        for(j = 0; j < carro.width ; j++){
+            if(carro.array[i][j])
+                Buffer2[carro.row+i][carro.col+j] = carro.array[i][j];
+        }
+    }
+
+
+    for(int i=0; i<8;i++){
+      for(int j=0; j<8;j++){
+        lc.setLed(0,i,j,__DISPLAY__[i][j]+Buffer[i][j]);
+      }  
+    }
+    for(int x=8;x<16;x++){
+      digitalWrite(fila[x-8],LOW);
+      for(int y=0; y<8;y++){
+        if(__DISPLAY__[x][y]+Buffer[x][y]){
+          digitalWrite(col[y],HIGH);
+        }
+      }
+      for(int y=0; y<8;y++){
+        if(__DISPLAY__[x][y]+Buffer[x][y]){
+          digitalWrite(col[y],LOW);
+        }
+      }
+      Clear();
+    }
+    
+      /*for(int x=8;x<16;x++){
+      digitalWrite(fila[x-8],LOW);
+      for(int y=0; y<8;y++){
+        if(Table[x][y]+Buffer[x-8][y] == 1){
+          digitalWrite(col[y],HIGH);
+        }
+      }
+      
+      delay(1);
+      for(int y=0; y<8;y++){
+        if(Table[x][y]+Buffer[x-8][y] == 1){
+          digitalWrite(col[y],LOW);
+        }
+      }
+      Clear();
+      }*/
+}
+
+void visualizarMatriz(){
+  for(int i=0;i<8;i++){
+      for(int j=0;j<8;j++){
+        lc.setLed(0,i,j,Table[i][j]);
+      }
+    }
+}
+
+void ManipularFiguras(int action){
+   Figura temp = CopiarFigura(actual);
+   switch(action){
+       case 's':
+           temp.row++;
+           if(Ver_posicion(temp)){
+               if(actual.row==5){
+                   GetFigura2();
+               }
+               actual.row++;
+               actual2.row++;
+           }
+           else {
+               //WriteToTable();
+               GetFigura();
+           }
+       break;
+   }
+
+   BorrarFigura(temp);
+   ImprimirTablero();
+}
+
+void ManipularMovimiento(int action){
+
+    Figura temp = CopiarFigura(carro);
+    switch(action){
+    case 'd':
+        temp.col++;
+        if(CheckPositionCarro(temp)){
+             carro.col++;
+        }
+
+        break;
+    case 'a':
+        temp.col--;
+        if(CheckPositionCarro(temp))
+            carro.col--;
+        break;
+    }
+
+    BorrarFigura(temp);
+    ImprimirTablero();
 }
